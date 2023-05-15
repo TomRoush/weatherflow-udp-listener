@@ -11,7 +11,7 @@ LABEL maintainer="Vince Skahan vinceskahan@gmail.com"
 ADD listen.py requirements.txt /
 
 # Install the required Python packages for InfluxDB and MQTT support
-RUN pip3 install -r requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
 
 # Uncomment an ENTRYPOINT below, or modify to suit your needs:
 
