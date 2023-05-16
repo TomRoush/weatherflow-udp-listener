@@ -46,12 +46,14 @@ optional arguments:
                         hostname or ip of InfluxDb HTTP API
   --influxdb_port INFLUXDB_PORT
                         port of InfluxDb HTTP API
-  --influxdb_user INFLUXDB_USER
-                        InfluxDb username
-  --influxdb_pass INFLUXDB_PASS
-                        InfluxDb password
-  --influxdb_db INFLUXDB_DB
-                        InfluxDb database name
+  --influxdb_ssl        use HTTPS with InfluxDb HTTP API
+  --influxdb_verify_ssl verify InfluxDb HTTP SSL certificate
+  --influxdb_token INFLUXDB_TOKEN
+                        InfluxDb token
+  --influxdb_org INFLUXDB_ORG
+                        InfluxDb organization
+  --influxdb_bucket INFLUXDB_BUCKET
+                        InfluxDb bucket name
   --mqtt_user MQTT_USER
                         MQTT username (if needed)
   --mqtt_pass MQTT_PASS
@@ -525,14 +527,17 @@ def process_hub_status(data):
 #----------------
 
 def influxdb_publish(event, data):
-    from influxdb import InfluxDBClient
+    from influxdb_client import InfluxDBClient
+    from influxdb_client.client.write_api import SYNCHRONOUS
 
     try:
-        client = InfluxDBClient(host=args.influxdb_host,
-                                port=args.influxdb_port,
-                                username=args.influxdb_user,
-                                password=args.influxdb_pass,
-                                database=args.influxdb_db)
+        protocol = 'https' if args.influxdb_ssl else 'http'
+        client = InfluxDBClient(
+            url=f'{protocol}://{host}:{port}',
+            token=args.influxdb_token,
+            org=args.influxdb_org,
+            verify_ssl=args.influx_verify_ssl
+        )
         payload = {}
         payload['measurement'] = event
 
@@ -542,8 +547,8 @@ def influxdb_publish(event, data):
         if args.verbose:
             print ("publishing %s to influxdb [%s:%s]: %s" % (event,args.influxdb_host, args.influxdb_port, payload))
 
-        # write_points() allows us to pass in a precision with the timestamp
-        client.write_points([payload], time_precision='s')
+        write_api = client.write_api(write_options=SYNCHRONOUS)
+        write_api.write(bucket=args.influxdb_bucket, record=payload)
 
     except Exception as e:
         print("Failed to connect to InfluxDB: %s" % e)
@@ -556,7 +561,7 @@ def mqtt_publish(mqtt_host,mqtt_topic,data):
     import paho.mqtt.publish as publish
     print ("publishing to mqtt://%s/%s" % (mqtt_host, mqtt_topic))
     if args.no_pub:
-        print ("    ", json.dumps(data,sort_keys=True));
+        print ("    ", json.dumps(data,sort_keys=True))
 
     if not args.no_pub:
 
@@ -592,9 +597,9 @@ def print_raw(data):
         if args.raw:
             if args.indent:
                 print ("")
-                print (json.dumps(data,sort_keys=True,indent=2));
+                print (json.dumps(data,sort_keys=True,indent=2))
             else:
-                print ("    raw data: ", json.dumps(data,sort_keys=True));
+                print ("    raw data: ", json.dumps(data,sort_keys=True))
             next
 
 
@@ -674,7 +679,7 @@ def report_it(data):
        print ("ERROR: unknown data type in", data)
        if args.syslog:
          message = "unknown data type in " + json.dumps(data,sort_keys=True)
-         loginf(message);
+         loginf(message)
 
 #---------
 
@@ -707,12 +712,14 @@ for --limit, possibilities are:
     parser.add_argument("-t", "--mqtt_topic",  dest="mqtt_topic",  action="store", help="MQTT topic to post to")
     parser.add_argument("-a", "--address",     dest="address",     action="store", help="address to listen on")
 
-    parser.add_argument("--influxdb",      dest="influxdb",      action="store_true",                                 help="publish to influxdb")
-    parser.add_argument("--influxdb_host", dest="influxdb_host", action="store",      default="localhost",            help="hostname of InfluxDB HTTP API")
-    parser.add_argument("--influxdb_port", dest="influxdb_port", action="store",      default=8086,         type=int, help="hostname of InfluxDB HTTP API")
-    parser.add_argument("--influxdb_user", dest="influxdb_user", action="store",                                      help="InfluxDB username")
-    parser.add_argument("--influxdb_pass", dest="influxdb_pass", action="store",                                      help="InfluxDB password")
-    parser.add_argument("--influxdb_db",   dest="influxdb_db",   action="store",      default="smartweather",         help="InfluxDB database name")
+    parser.add_argument("--influxdb",            dest="influxdb",        action="store_true",                                 help="publish to influxdb")
+    parser.add_argument("--influxdb_host",       dest="influxdb_host",   action="store",      default="localhost",            help="hostname of InfluxDB HTTP API")
+    parser.add_argument("--influxdb_port",       dest="influxdb_port",   action="store",      default=8086,         type=int, help="hostname of InfluxDB HTTP API")
+    parser.add_argument("--influxdb_ssl",        dest="influxdb_ssl",    action="store_true",                                 help="use SSL with InfluxDB HTTP API")
+    parser.add_argument("--influxdb_verify_ssl", dest="influxdb_ssl",    action="store_true",                                 help="verify SSL certificate for InfluxDB HTTP API")
+    parser.add_argument("--influxdb_token",      dest="influxdb_token",  action="store",                                      help="InfluxDB token")
+    parser.add_argument("--influxdb_org",        dest="influxdb_org",    action="store",                                      help="InfluxDB organization name")
+    parser.add_argument("--influxdb_bucket",     dest="influxdb_bucket", action="store",      default="smartweather",         help="InfluxDB bucket name")
 
     parser.add_argument("--mqtt_user", dest="mqtt_user", action="store", help="MQTT username (if needed)")
     parser.add_argument("--mqtt_pass", dest="mqtt_pass", action="store", help="MQTT password (if MQTT_USER has a password)")
