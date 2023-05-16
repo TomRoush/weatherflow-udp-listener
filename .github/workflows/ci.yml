@@ -40,6 +40,7 @@ jobs:
         id: docker_build
         uses: docker/build-push-action@v3
         with:
+          file: {context}/Docker/wfudp/Dockerfile
           platforms: linux/amd64,linux/arm64,linux/arm/v7
           push: ${{ github.event_name == 'push' || github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
