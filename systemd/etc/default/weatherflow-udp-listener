@@ -6,5 +6,5 @@
 # this example publishes to influxdb on localhost:8086 to a db named 'testdb'
 # with the multisensor option enabled to get the desired element name in the db
 
-CMDARGS="--influxdb --influxdb_host=localhost --influxdb_port=8086 --influxdb_db=testdb -M"
+CMDARGS="--influxdb --influxdb_host=influxdb --influxdb_port=8086 --influxdb_bucket=testdb --influxdb_token=token --influxdb_org=default -M"
 
