@@ -533,10 +533,10 @@ def influxdb_publish(event, data):
     try:
         protocol = 'https' if args.influxdb_ssl else 'http'
         client = InfluxDBClient(
-            url=f'{protocol}://{host}:{port}',
+            url=f'{protocol}://{args.influxdb_host}:{args.influxdb_port}',
             token=args.influxdb_token,
             org=args.influxdb_org,
-            verify_ssl=args.influx_verify_ssl
+            verify_ssl=args.influxdb_verify_ssl
         )
         payload = {}
         payload['measurement'] = event
@@ -548,7 +548,7 @@ def influxdb_publish(event, data):
             print ("publishing %s to influxdb [%s:%s]: %s" % (event,args.influxdb_host, args.influxdb_port, payload))
 
         write_api = client.write_api(write_options=SYNCHRONOUS)
-        write_api.write(bucket=args.influxdb_bucket, record=payload)
+        write_api.write(bucket=args.influxdb_bucket, record=payload, write_precision='s')
 
     except Exception as e:
         print("Failed to connect to InfluxDB: %s" % e)
@@ -712,14 +712,14 @@ for --limit, possibilities are:
     parser.add_argument("-t", "--mqtt_topic",  dest="mqtt_topic",  action="store", help="MQTT topic to post to")
     parser.add_argument("-a", "--address",     dest="address",     action="store", help="address to listen on")
 
-    parser.add_argument("--influxdb",            dest="influxdb",        action="store_true",                                 help="publish to influxdb")
-    parser.add_argument("--influxdb_host",       dest="influxdb_host",   action="store",      default="localhost",            help="hostname of InfluxDB HTTP API")
-    parser.add_argument("--influxdb_port",       dest="influxdb_port",   action="store",      default=8086,         type=int, help="hostname of InfluxDB HTTP API")
-    parser.add_argument("--influxdb_ssl",        dest="influxdb_ssl",    action="store_true",                                 help="use SSL with InfluxDB HTTP API")
-    parser.add_argument("--influxdb_verify_ssl", dest="influxdb_ssl",    action="store_true",                                 help="verify SSL certificate for InfluxDB HTTP API")
-    parser.add_argument("--influxdb_token",      dest="influxdb_token",  action="store",                                      help="InfluxDB token")
-    parser.add_argument("--influxdb_org",        dest="influxdb_org",    action="store",                                      help="InfluxDB organization name")
-    parser.add_argument("--influxdb_bucket",     dest="influxdb_bucket", action="store",      default="smartweather",         help="InfluxDB bucket name")
+    parser.add_argument("--influxdb",            dest="influxdb",            action="store_true",                                 help="publish to influxdb")
+    parser.add_argument("--influxdb_host",       dest="influxdb_host",       action="store",      default="localhost",            help="hostname of InfluxDB HTTP API")
+    parser.add_argument("--influxdb_port",       dest="influxdb_port",       action="store",      default=8086,         type=int, help="hostname of InfluxDB HTTP API")
+    parser.add_argument("--influxdb_ssl",        dest="influxdb_ssl",        action="store_true",                                 help="use SSL with InfluxDB HTTP API")
+    parser.add_argument("--influxdb_verify_ssl", dest="influxdb_verify_ssl", action="store_true",                                 help="verify SSL certificate for InfluxDB HTTP API")
+    parser.add_argument("--influxdb_token",      dest="influxdb_token",      action="store",                                      help="InfluxDB token")
+    parser.add_argument("--influxdb_org",        dest="influxdb_org",        action="store",                                      help="InfluxDB organization name")
+    parser.add_argument("--influxdb_bucket",     dest="influxdb_bucket",     action="store",      default="smartweather",         help="InfluxDB bucket name")
 
     parser.add_argument("--mqtt_user", dest="mqtt_user", action="store", help="MQTT username (if needed)")
     parser.add_argument("--mqtt_pass", dest="mqtt_pass", action="store", help="MQTT password (if MQTT_USER has a password)")
