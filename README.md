@@ -71,12 +71,10 @@ This requires installing the paho mqtt and influxdb python libraries.
 On a debian(ish) system that can be done by:
 ```
 # for python3
-sudo apt-get install -y python3-pip && sudo pip3 install paho-mqtt influxdb
-or....
-sudo apt-get install -y python3-paho-mqtt python3-influxdb
+sudo apt-get install -y python3-pip && sudo pip3 install -r requirements.txt
 
 # for python2
-sudo apt-get install -y python-pip  && sudo pip  install paho-mqtt influxdb
+sudo apt-get install -y python-pip  && sudo pip  install -r requirements.txt
 ```
 
 ##  Usage
@@ -109,12 +107,14 @@ optional arguments:
                         hostname or ip of InfluxDb HTTP API
   --influxdb_port INFLUXDB_PORT
                         port of InfluxDb HTTP API
-  --influxdb_user INFLUXDB_USER
-                        InfluxDb username
-  --influxdb_pass INFLUXDB_PASS
-                        InfluxDb password
-  --influxdb_db INFLUXDB_DB
-                        InfluxDb database name
+  --influxdb_ssl        use HTTPS with InfluxDb HTTP API
+  --influxdb_verify_ssl verify InfluxDb HTTP SSL certificate
+  --influxdb_token INFLUXDB_TOKEN
+                        InfluxDb token
+  --influxdb_org INFLUXDB_ORG
+                        InfluxDb organization
+  --influxdb_bucket INFLUXDB_BUCKET
+                        InfluxDb bucket name
   -v, --verbose         verbose output to watch the threads
 
 for --limit, possibilities are:
@@ -346,7 +346,7 @@ This will print to a remote host 'influxdb' using a specified port and database,
 # this is typical usage for calling the program via /etc/rc.local or from a shell
 # - it backgrounds the command, and stay alive after the calling shell exits
 
-nohup python3 listen.py --influxdb --influxdb_host=influxdb --influxdb_port=8086  --influxdb_db=testdb -M &
+nohup python3 listen.py --influxdb --influxdb_host=influxdb --influxdb_port=8086 --influxdb_bucket=testdb --influxdb_token=token --influxdb_org=default -M &
 
 ```
 
@@ -358,6 +358,6 @@ Initially it might make sense to add the -n (no_pub) flag to see is being publis
 
 # you might want to also add -v to see the reporter and listener threads
 
-python3 listen.py --influxdb --influxdb_host=influxdb --influxdb_port=8086  --influxdb_db=testdb -M -n
+python3 listen.py --influxdb --influxdb_host=influxdb --influxdb_port=8086 --influxdb_bucket=testdb --influxdb_token=token --influxdb_org=default -M -n
 
 ```
